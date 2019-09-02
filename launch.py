@@ -25,7 +25,8 @@ AUTH = None
 @click.argument(
     'templatefile',
     type=click.File('r'),
-    required=True
+    required=True,
+    default=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'template_job.xml')
 )
 @click.option(
     '-k',
