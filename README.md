@@ -5,7 +5,7 @@ It allow you to validate your jenkinsfile, create a task from it, launch and wat
 ## Usage
 — Create `debug` folder on your Jenkins ~or change this script~
 
-— Edit `AUTH` and `JENKINS_URL` variables
+— Set `AUTH_USER`, `AUTH_TOKEN` and `JENKINS_URL` environment variables
 
 — `./launch.py --help`, it's easy and only few options :)
 
