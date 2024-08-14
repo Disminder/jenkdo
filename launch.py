@@ -72,7 +72,7 @@ def main(jenkinsfile, templatefile, keep, verbose, yes, force):
         Should contain '{{ jenkinsfile | forceescape() }}' in <script> section
     '''
     if JENKINS_URL is None:
-        msg = '> Please, specify JENKINS_URL and AUTH_* variable'
+        msg = '> Please, specify JENKINS_URL and AUTH_USER/AUTH_TOKEN environment variable'
         print(colored(msg, 'red'))
         exit(1)
 
