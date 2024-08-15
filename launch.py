@@ -11,9 +11,8 @@ import requests
 from termcolor import colored
 
 
-JENKINS_URL = ''
-AUTH = None
-# AUTH = requests.auth.HTTPBasicAuth('username', 'password')
+JENKINS_URL = os.environ['JENKINS_URL']
+AUTH = requests.auth.HTTPBasicAuth(os.environ['AUTH_USER'], os.environ['AUTH_TOKEN'])
 
 
 @click.command()
@@ -62,21 +61,18 @@ AUTH = None
 )
 def main(jenkinsfile, templatefile, keep, verbose, yes, force):
     '''
-        This script will create pipeline task from TEMPLATEFIE with
-        JENKINSFILE as pipeline script
+        This script will create pipeline task from TEMPLATE_FILE with JENKINS_FILE as pipeline script
 
-        JENKINSFILE - File with pipeline. Should end on '.groovy' or
-        '.jenkinsfile'
+        JENKINS_FILE - File with pipeline. Should end on '.groovy' or '.jenkinsfile'
 
-        TEMPLATEFILE - File with job config. Should be '.xml'.
+        TEMPLATE_FILE - File with job config. Should be '.xml'.
         See template_job.xml here.
-        Or get it from just created pipeline task via 'GET
-        %JENKINS_URL%/job/%PIPELINE_TASK%/config.xml'. Should contain
-        '{{ jenkinsfile | forceescape() }}' in <script> section
-
+        Or get it from just created pipeline task via
+        'GET %JENKINS_URL%/job/%PIPELINE_TASK%/config.xml'.
+        Should contain '{{ jenkinsfile | forceescape() }}' in <script> section
     '''
-    if AUTH is None:
-        msg = '> Please, specify AUTH variable'
+    if JENKINS_URL is None:
+        msg = '> Please, specify JENKINS_URL and AUTH_USER/AUTH_TOKEN environment variable'
         print(colored(msg, 'red'))
         exit(1)
 
