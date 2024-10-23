@@ -15,7 +15,11 @@ JENKINS_URL = os.environ['JENKINS_URL']
 AUTH = requests.auth.HTTPBasicAuth(os.environ['AUTH_USER'], os.environ['AUTH_TOKEN'])
 
 
-@click.command()
+@click.group()
+def build_cli():
+    pass
+
+@build_cli.command()
 @click.argument(
     'jenkinsfile',
     type=click.File('r'),
@@ -59,9 +63,12 @@ AUTH = requests.auth.HTTPBasicAuth(os.environ['AUTH_USER'], os.environ['AUTH_TOK
     show_default=False,
     help='Delete a job if it\'s already exists'
 )
-def main(jenkinsfile, templatefile, keep, verbose, yes, force):
+def build(jenkinsfile, templatefile, keep, verbose, yes, force):
     '''
-        This script will create pipeline task from TEMPLATE_FILE with JENKINS_FILE as pipeline script
+        Execute passed file as build on Jenkins
+
+        This script will create pipeline task from TEMPLATE_FILE with
+        JENKINS_FILE as pipeline script
 
         JENKINS_FILE - File with pipeline. Should end on '.groovy' or '.jenkinsfile'
 
@@ -91,6 +98,54 @@ def main(jenkinsfile, templatefile, keep, verbose, yes, force):
 
     if job.watch_stream(verbose) == 0:
         atexit.unregister(job.stop)
+
+
+@click.group()
+def script_cli():
+    pass
+
+@script_cli.command()
+@click.argument(
+    'script',
+    type=click.File('r'),
+    required=True
+)
+def script(script):
+    '''
+        Execute passed file as script on Jenkins
+
+        SCRIPT - File with script. Should end on '.groovy'.
+    '''
+    if AUTH is None:
+        msg = '> Please, specify AUTH variable'
+        print(colored(msg, 'red'))
+        exit(1)
+
+    script_content = script.read()
+    script.close()
+    data = {
+        'script': script_content,
+    }
+
+    url = '{}/scriptText'.format(JENKINS_URL)
+
+    res = requests.post(url, data=data, auth=AUTH)
+
+    if res.status_code != 200:
+        msg = "> Script execution failed with code {}".format(res.status_code)
+        print(colored(msg,'red'))
+        msg = "> Response:"
+        print(colored(msg,'red'))
+        print(res.text)
+        exit(1)
+
+    print(res.text)
+
+    exit(0)
+
+cli = click.CommandCollection(sources=[build_cli, script_cli])
+if __name__ == '__main__':
+    cli()
 
 
 class JenkinsJob:
@@ -356,6 +411,3 @@ class JenkinsJob:
         log_file.close()
 
         return filename
-
-if __name__ == '__main__':
-    main()
