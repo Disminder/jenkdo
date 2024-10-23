@@ -11,15 +11,48 @@ import requests
 from termcolor import colored
 
 
-JENKINS_URL = os.environ['JENKINS_URL']
-AUTH = requests.auth.HTTPBasicAuth(os.environ['AUTH_USER'], os.environ['AUTH_TOKEN'])
+JENKINS_URL = None
+AUTH = None
 
 
 @click.group()
-def build_cli():
+@click.option(
+    '-j',
+    '--jenkins',
+    'jenkins_url',
+    envvar='JENKDO_URL',
+    required=True,
+    help='Jenkins URL. Can be set via env var "JENKDO_URL"'
+)
+@click.option(
+    '-u',
+    '--user',
+    'jenkins_user',
+    envvar='JENKDO_USER',
+    required=True,
+    help='User on jenkins to execute as. Can be set via env var "JENKDO_USER"'
+)
+@click.option(
+    '-p',
+    '--password',
+    'jenkins_password',
+    envvar='JENKDO_PASSWORD',
+    required=True,
+    prompt=True,
+    hide_input=True,
+    help='Jenkins password or token. Can be set via env var "JENKDO_PASSWORD"'
+)
+def cli(jenkins_url, jenkins_user, jenkins_password):
+    """
+        Script for launch things on jenkins
+
+        Invocation without commands do nothing
+    """
+    globals()['JENKINS_URL'] = jenkins_url
+    globals()['AUTH'] = requests.auth.HTTPBasicAuth(jenkins_user, jenkins_password)
     pass
 
-@build_cli.command()
+@cli.command()
 @click.argument(
     'jenkinsfile',
     type=click.File('r'),
@@ -78,11 +111,6 @@ def build(jenkinsfile, templatefile, keep, verbose, yes, force):
         'GET %JENKINS_URL%/job/%PIPELINE_TASK%/config.xml'.
         Should contain '{{ jenkinsfile | forceescape() }}' in <script> section
     '''
-    if JENKINS_URL is None:
-        msg = '> Please, specify JENKINS_URL and AUTH_USER/AUTH_TOKEN environment variable'
-        print(colored(msg, 'red'))
-        exit(1)
-
     job = JenkinsJob(jenkinsfile, templatefile)
     job.validate()
     if not yes:
@@ -100,11 +128,7 @@ def build(jenkinsfile, templatefile, keep, verbose, yes, force):
         atexit.unregister(job.stop)
 
 
-@click.group()
-def script_cli():
-    pass
-
-@script_cli.command()
+@cli.command()
 @click.argument(
     'script',
     type=click.File('r'),
@@ -116,11 +140,6 @@ def script(script):
 
         SCRIPT - File with script. Should end on '.groovy'.
     '''
-    if AUTH is None:
-        msg = '> Please, specify AUTH variable'
-        print(colored(msg, 'red'))
-        exit(1)
-
     script_content = script.read()
     script.close()
     data = {
@@ -143,7 +162,6 @@ def script(script):
 
     exit(0)
 
-cli = click.CommandCollection(sources=[build_cli, script_cli])
 if __name__ == '__main__':
     cli()
 
