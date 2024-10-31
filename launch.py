@@ -162,9 +162,6 @@ def script(script):
 
     exit(0)
 
-if __name__ == '__main__':
-    cli()
-
 
 class JenkinsJob:
     def __init__(self, jenkinsfile, template):
@@ -429,3 +426,7 @@ class JenkinsJob:
         log_file.close()
 
         return filename
+
+
+if __name__ == '__main__':
+    cli()
